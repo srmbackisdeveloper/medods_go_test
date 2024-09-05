@@ -9,20 +9,26 @@ import (
 func (s *Server) RegisterRoutes() http.Handler {
 	r := gin.Default()
 
-	r.GET("/", s.HelloWorldHandler)
-
 	r.GET("/health", s.healthHandler)
+	r.GET("/ping", s.pingHandler)
+	r.POST("/token", s.tokenHandler)
+	r.POST("/refresh-token", s.refreshTokenHandler)
 
 	return r
 }
 
-func (s *Server) HelloWorldHandler(c *gin.Context) {
-	resp := make(map[string]string)
-	resp["message"] = "Hello World"
-
-	c.JSON(http.StatusOK, resp)
+func (s *Server) healthHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, s.db.Health())
 }
 
-func (s *Server) healthHandler(c *gin.Context) {
+func (s *Server) pingHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"msg": "pong"})
+}
+
+func (s *Server) tokenHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, s.db.Health())
+}
+
+func (s *Server) refreshTokenHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, s.db.Health())
 }
