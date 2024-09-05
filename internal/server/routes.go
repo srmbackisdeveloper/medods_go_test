@@ -8,11 +8,14 @@ import (
 
 func (s *Server) RegisterRoutes() http.Handler {
 	r := gin.Default()
-
-	r.GET("/health", s.healthHandler)
-	r.GET("/ping", s.pingHandler)
-	r.POST("/token", s.tokenHandler)
-	r.POST("/refresh-token", s.refreshTokenHandler)
+	
+	v1 := r.Group("/api/v1")
+	{
+		v1.GET("/health", s.healthHandler)
+		v1.GET("/ping", s.pingHandler)
+		v1.POST("/token", s.tokenHandler)
+		v1.POST("/refresh-token", s.refreshTokenHandler)
+	}
 
 	return r
 }
@@ -26,7 +29,12 @@ func (s *Server) pingHandler(c *gin.Context) {
 }
 
 func (s *Server) tokenHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, s.db.Health())
+	tokens := Tokens{
+		AccessToken:  "access t",
+		RefreshToken: "refresh t",
+	}
+
+	c.JSON(http.StatusOK, tokens)
 }
 
 func (s *Server) refreshTokenHandler(c *gin.Context) {
