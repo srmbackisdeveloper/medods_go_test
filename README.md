@@ -1,49 +1,98 @@
-# Project server
+# Mini Documentation
 
-One Paragraph of project description goes here
+## Base URL
 
-## Getting Started
+`http://<server_address>/api/v1`
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+## Endpoints
 
-## MakeFile
+| Method | Endpoint         | Description                                   |
+| ------ | ---------------- | --------------------------------------------- |
+| POST   | `/account`       | Creates a new account                         |
+| GET    | `/account`       | Retrieves account information                 |
+| GET    | `/health`        | Health check for the server                   |
+| GET    | `/ping`          | Simple ping to check if the server is running |
+| POST   | `/token`         | Generates access and refresh tokens           |
+| POST   | `/refresh-token` | Refreshes tokens using a valid refresh token  |
 
-run all make commands with clean tests
-```bash
-make all build
+## Clarification
+
+### `POST /account`
+
+Request Body
+
+```
+{
+  "email": "user@example.com",
+  "password": "user-password",
+  "name": "User Name"
+}
 ```
 
-build the application
-```bash
-make build
+### `GET /account`
+
+Headers: `Authorization: Bearer <access_token>`
+
+Response body
+
+```
+{
+  "id": "user-id",
+  "email": "user@example.com",
+  "name": "User Name",
+  "created_at": "timestamp"
+}
 ```
 
-run the application
-```bash
-make run
+### `GET /health`
+
+Response body
+
+```
+{
+  "status": "healthy"
+}
 ```
 
-Create DB container
-```bash
-make docker-run
+### `GET /ping`
+
+Response body:
+
+```
+{
+  "message": "pong"
+}
 ```
 
-Shutdown DB container
-```bash
-make docker-down
+### `POST /token`
+
+Params: `guid`
+
+Response body:
+
+```
+{
+  "access_token": "new-access-token",
+  "refresh_token": "new-refresh-token"
+}
+
 ```
 
-live reload the application
-```bash
-make watch
+### `POST /refresh-token`
+
+Request body:
+
+```
+{
+  "refresh_token": "valid-refresh-token"
+}
 ```
 
-run the test suite
-```bash
-make test
-```
+Response body:
 
-clean up binary from the last build
-```bash
-make clean
+```
+{
+  "access_token": "new-access-token",
+  "refresh_token": "new-refresh-token"
+}
 ```
