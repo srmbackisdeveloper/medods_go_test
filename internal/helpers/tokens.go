@@ -48,7 +48,6 @@ func HashRefreshToken(refreshToken string) (string, error) {
 }
 
 func VerifyAccessToken(accessToken string) (string, error) {
-	// Parse and validate the JWT token
 	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
@@ -56,12 +55,10 @@ func VerifyAccessToken(accessToken string) (string, error) {
 		return jwtKey, nil
 	})
 	if err != nil {
-		return "", errors.New("invalid token")
+		return "", errors.New("invalid token") 
 	}
 
-	// Check if the token is valid and extract the claims
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		// Check expiration
 		if exp, ok := claims["exp"].(float64); ok {
 			expirationTime := time.Unix(int64(exp), 0)
 			if time.Now().After(expirationTime) {
@@ -69,7 +66,6 @@ func VerifyAccessToken(accessToken string) (string, error) {
 			}
 		}
 
-		// Extract user ID from the token claims (assumed to be in "sub")
 		if userID, ok := claims["sub"].(string); ok {
 			return userID, nil
 		}

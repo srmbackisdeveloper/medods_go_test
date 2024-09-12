@@ -2,13 +2,14 @@ package server
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"net/http"
 	"server/internal/helpers"
 	"server/internal/models"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func (s *Server) healthHandler(c *gin.Context) {
@@ -84,7 +85,6 @@ func (s *Server) getAccountHandler(c *gin.Context) {
 }
 
 // Tokens
-
 func (s *Server) tokenHandler(c *gin.Context) {
 	userID := c.Query("guid")
 	if userID == "" {
@@ -98,21 +98,18 @@ func (s *Server) tokenHandler(c *gin.Context) {
 		return
 	}
 
-	// Generate refresh token
 	refreshToken, err := helpers.GenerateRefreshToken()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ApiResponse{Error: helpers.FailureRT})
 		return
 	}
 
-	// Hash the refresh token
 	hashedRefreshToken, err := helpers.HashRefreshToken(refreshToken)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ApiResponse{Error: "token hashing failure"})
 		return
 	}
 
-	// Save or update the refresh token in the database
 	err = s.db.SaveRefreshToken(userID, hashedRefreshToken)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ApiResponse{Error: helpers.DbError("failed to save refresh token")})
@@ -130,29 +127,25 @@ func (s *Server) refreshTokenHandler(c *gin.Context) {
 		RefreshToken string `json:"refresh_token"`
 	}
 
-	// Bind JSON request
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ApiResponse{Error: helpers.WrongRequest})
 		return
 	}
 
-	// Fetch token info from the database using the user_id linked to the refresh token
 	tokenInfo, err := s.db.GetUserByRefreshToken(req.RefreshToken)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, ApiResponse{Error: err.Error()})
 		return
 	}
 
-	// ID
+	// getid
 	uid := tokenInfo.UserID
 
-	// Check if the refresh token is expired (older than 1 week)
 	if tokenInfo.CreatedAt.Before(time.Now().AddDate(0, 0, -7)) {
 		c.JSON(http.StatusUnauthorized, ApiResponse{Error: "refresh token expired"})
 		return
 	}
 
-	// Compare the provided refresh token with the hashed refresh token from the database
 	//err = bcrypt.CompareHashAndPassword([]byte(tokenInfo.HashedRefreshToken), []byte(req.RefreshToken))
 	//if err != nil {
 	//	c.JSON(http.StatusUnauthorized, ApiResponse{Error: helpers.WrongRT})
@@ -164,35 +157,30 @@ func (s *Server) refreshTokenHandler(c *gin.Context) {
 		return
 	}
 
-	// If the refresh token is valid, generate new tokens
 	newAccessToken, err := helpers.GenerateAccessToken(uid)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ApiResponse{Error: helpers.FailureAT})
 		return
 	}
 
-	// Generate new refresh token
 	newRefreshToken, err := helpers.GenerateRefreshToken()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ApiResponse{Error: helpers.FailureRT})
 		return
 	}
 
-	// Hash the new refresh token
 	hashedNewRefreshToken, err := helpers.HashRefreshToken(newRefreshToken)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ApiResponse{Error: "token hashing failure"})
 		return
 	}
 
-	// Update the stored refresh token with the new hashed refresh token
 	err = s.db.UpdateRefreshToken(uid, hashedNewRefreshToken)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, ApiResponse{Error: helpers.DbError("update refresh token failure")})
 		return
 	}
 
-	// Respond with new tokens
 	c.JSON(http.StatusOK, Tokens{
 		AccessToken:  newAccessToken,
 		RefreshToken: newRefreshToken,
